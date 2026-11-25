@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#050505" />
+    <title>ManuGrafias · Panel</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <!-- Shown until the session is known: no content is visible without a session (AC-10.1). -->
+    <main id="view-loading" class="center-view">
+      <p class="muted">Cargando…</p>
+    </main>
+
+    <!-- FR-10: login -->
+    <main id="view-login" class="center-view" hidden>
+      <div class="card login-card">
+        <img src="icon.svg" alt="" class="login-logo" />
+        <h1>ManuGrafias <span class="grad-text">Panel</span></h1>
+        <p class="muted">Acceso solo para el administrador.</p>
+        <button id="btn-login" type="button" class="btn btn-primary btn-block">Iniciar sesión con Google</button>
+        <p id="login-message" class="message" role="alert" hidden></p>
+      </div>
+    </main>
+
+    <!-- Panel -->
+    <div id="view-app" hidden>
+      <header class="topbar">
+        <div class="topbar-brand">
+          <img src="icon.svg" alt="" />
+          <span>ManuGrafias <span class="grad-text">Panel</span></span>
+        </div>
+        <div class="topbar-user">
+          <span id="user-email" class="muted"></span>
+          <button id="btn-logout" type="button" class="btn btn-ghost">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <h2 class="eyebrow">Fotógrafos</h2>
+          <ul id="photographer-list" class="photographer-list"></ul>
+          <button id="btn-new-photographer" type="button" class="btn btn-secondary btn-block">+ Nuevo fotógrafo</button>
+        </aside>
+
+        <section id="content" class="content" aria-live="polite"></section>
+      </div>
+    </div>
+  </body>
+</html>

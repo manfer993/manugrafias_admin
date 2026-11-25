@@ -1,0 +1,26 @@
+# Supabase pauses free projects after 7 days of low database activity, which would stop serving the
+# published videos and targets.mind to the AR experience. This runs a tiny database query twice a week.
+# Note: GitHub disables scheduled workflows in public repositories after 60 days without commits;
+# re-enable it in Actions if that happens (or push any commit).
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '17 13 * * 1,4' # Monday and Thursday, 13:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query the database
+        env:
+          SUPABASE_URL: https://hdajccuxsqteijcodyxg.supabase.co
+          # Publishable key: public by design (same value as js/config.js).
+          SUPABASE_KEY: sb_publishable_Q7rIfG9J6Li6fap22SoHYQ_iMeG9nkf
+        run: |
+          curl -fsS -X POST "$SUPABASE_URL/rest/v1/rpc/is_media_admin" \
+            -H "apikey: $SUPABASE_KEY" -H "content-type: application/json" -d '{}'

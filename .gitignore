@@ -1,0 +1,5 @@
+.DS_Store
+node_modules/
+# Firebase Admin service account keys: never commit.
+*service-account*.json
+firebase-admin*.json

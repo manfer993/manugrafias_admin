@@ -1,0 +1,10 @@
+{
+  "name": "manugrafias-admin",
+  "private": true,
+  "type": "module",
+  "description": "ManuGrafias AR - content panel (MVP 2)",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8080"
+  }
+}
