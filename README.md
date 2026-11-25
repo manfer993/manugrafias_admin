@@ -48,6 +48,8 @@ experience uses absolute URLs as they are.
   apply). The administrator account is the only one: sign-ups are disabled.
 - NFR-02: media in Supabase Storage (free plan) instead of Cloud Storage for Firebase (needs the Blaze plan).
 - Editing the photographer's name or links updates the AR experience on save (only artworks wait for "Publish").
+- SRS 1.2 says photographers are never deleted; the panel can delete one (after typing its slug to confirm): its
+  document, artworks and files are removed and its URL and QR code stop working at once. The slug becomes free again.
 
 ## Administrator setup (done once)
 

@@ -124,6 +124,8 @@ code { font-size: 0.9em; background: rgba(255, 255, 255, 0.06); padding: 1px 6px
 .title-row { display: flex; gap: 8px; }
 .title-row .field { flex: 1; }
 
+.danger-zone { border-color: rgba(248, 113, 113, 0.3); }
+
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }

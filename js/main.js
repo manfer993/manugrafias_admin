@@ -196,7 +196,7 @@ function renderContent() {
   }
   $('content').innerHTML = state.creating
     ? photographerFormHtml(null)
-    : [photographerFormHtml(p), linkHtml(p), publishHtml(p), artworksHtml(p), addArtworkHtml()].join('');
+    : [photographerFormHtml(p), linkHtml(p), publishHtml(p), artworksHtml(p), addArtworkHtml(), dangerHtml(p)].join('');
   bindContent();
   if (state.flash) {
     setMessage($(state.flash.target), state.flash.kind, state.flash.text);
@@ -346,6 +346,16 @@ function addArtworkHtml() {
   </section>`;
 }
 
+function dangerHtml(p) {
+  return `<section class="card section danger-zone">
+    <h2>Eliminar fotógrafo</h2>
+    <p class="muted">Borra a ${esc(p.name)}, sus ${state.artworks.length} obra(s) y todos sus archivos. La app deja de mostrarlo
+      en el acto y su enlace y QR dejan de funcionar. No se puede deshacer.</p>
+    <div id="delete-message" class="message" hidden></div>
+    <div class="actions"><button type="button" id="btn-delete-photographer" class="btn btn-danger">Eliminar fotógrafo</button></div>
+  </section>`;
+}
+
 // ---- Event binding ----
 
 function bindContent() {
@@ -355,6 +365,7 @@ function bindContent() {
   $('btn-qr').addEventListener('click', onDownloadQr);
   $('btn-publish').addEventListener('click', onPublish);
   $('btn-retry').addEventListener('click', onPublish);
+  $('btn-delete-photographer').addEventListener('click', onDeletePhotographer);
   $('artwork-form')?.addEventListener('submit', onAddArtwork);
   for (const card of document.querySelectorAll('.artwork')) {
     const artwork = state.artworks.find((a) => a.id === card.dataset.id);
@@ -399,6 +410,42 @@ async function onSavePhotographer(event) {
     (error) => {
       setFormDisabled(form, false);
       setMessage(message, 'error', `No se pudo guardar: ${error.message}`);
+    },
+  );
+}
+
+async function onDeletePhotographer() {
+  const { slug, photographer } = state;
+  if (state.busy > 0) return alert('Espera a que termine la subida o publicación en curso.');
+  const typed = prompt(
+    `Esto elimina a «${photographer.name}», sus obras y sus archivos, y no se puede deshacer.\n` +
+      `Para confirmar, escribe su identificador: ${slug}`,
+  );
+  if (typed === null) return;
+  const message = $('delete-message');
+  if (typed.trim() !== slug) return setMessage(message, 'error', 'El identificador no coincide. No se eliminó nada.');
+
+  const button = $('btn-delete-photographer');
+  button.disabled = true;
+  setMessage(message, 'info', 'Eliminando…');
+  await guarded(
+    () =>
+      busy(async () => {
+        await api.deletePhotographer(slug);
+        let text = `«${photographer.name}» eliminado.`;
+        try {
+          await api.removeFiles(await api.listFiles(`photographers/${slug}`));
+        } catch (error) {
+          console.warn('File cleanup failed', error);
+          text += ' Algunos archivos no se pudieron borrar del almacenamiento (no afecta a la app).';
+        }
+        state.slug = null;
+        await loadPhotographers(null);
+        alert(text);
+      }),
+    (error) => {
+      button.disabled = false;
+      setMessage(message, 'error', api.isNetworkError(error) ? 'Se perdió la conexión, intenta de nuevo.' : `No se pudo eliminar: ${error.message}`);
     },
   );
 }

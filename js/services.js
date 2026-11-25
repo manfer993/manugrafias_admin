@@ -111,6 +111,15 @@ export function updatePhotographer(slug, { name, links }) {
   return fs(updateDoc(doc(db, 'photographers', slug), { name, links }));
 }
 
+// Removes the photographer and all its artworks in one batch: the AR experience stops showing it at once.
+export async function deletePhotographer(slug) {
+  const snap = await fs(getDocs(query(collection(db, 'artworks'), where('photographerSlug', '==', slug))));
+  const batch = writeBatch(db);
+  for (const d of snap.docs) batch.delete(d.ref);
+  batch.delete(doc(db, 'photographers', slug));
+  return fs(batch.commit());
+}
+
 // ---- Artworks (FR-12), panel-only collection ----
 
 export async function listArtworks(slug) {
