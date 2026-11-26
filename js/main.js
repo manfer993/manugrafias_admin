@@ -13,6 +13,7 @@ import {
   targetsPath,
   unusedPaths,
 } from './plan.js';
+import { confirmDialog } from './dialog.js';
 import { downloadBlob, qrPngBlob } from './qr.js';
 import {
   cleanLinks,
@@ -416,14 +417,21 @@ async function onSavePhotographer(event) {
 
 async function onDeletePhotographer() {
   const { slug, photographer } = state;
-  if (state.busy > 0) return alert('Espera a que termine la subida o publicación en curso.');
-  const typed = prompt(
-    `Esto elimina a «${photographer.name}», sus obras y sus archivos, y no se puede deshacer.\n` +
-      `Para confirmar, escribe su identificador: ${slug}`,
-  );
-  if (typed === null) return;
   const message = $('delete-message');
-  if (typed.trim() !== slug) return setMessage(message, 'error', 'El identificador no coincide. No se eliminó nada.');
+  if (state.busy > 0) return setMessage(message, 'error', 'Espera a que termine la subida o publicación en curso.');
+  const confirmed = await confirmDialog({
+    title: `¿Eliminar a ${photographer.name}?`,
+    message: 'Esta acción no se puede deshacer. Se borrará:',
+    details: [
+      `El fotógrafo, su nombre y sus enlaces.`,
+      `Sus ${state.artworks.length} obra(s), con sus fotos y videos.`,
+      'Su enlace y su código QR dejarán de funcionar en la app de inmediato.',
+    ],
+    confirmLabel: 'Eliminar fotógrafo',
+    danger: true,
+    requireText: slug,
+  });
+  if (!confirmed) return;
 
   const button = $('btn-delete-photographer');
   button.disabled = true;
@@ -440,8 +448,8 @@ async function onDeletePhotographer() {
           text += ' Algunos archivos no se pudieron borrar del almacenamiento (no afecta a la app).';
         }
         state.slug = null;
+        state.flash = { target: 'photographer-message', kind: text.includes('Algunos') ? 'info' : 'ok', text };
         await loadPhotographers(null);
-        alert(text);
       }),
     (error) => {
       button.disabled = false;
@@ -627,7 +635,13 @@ async function onReplace(event, artwork, card) {
 }
 
 async function onDelete(artwork) {
-  if (!confirm(`¿Eliminar «${artwork.title}»? Se seguirá viendo en la app hasta que publiques.`)) return;
+  const confirmed = await confirmDialog({
+    title: `¿Eliminar ${artwork.title}?`,
+    message: '¿Estás seguro de que quieres quitar esta obra de tu galería? Se seguirá viendo en la app hasta que publiques.',
+    confirmLabel: 'Eliminar obra',
+    danger: true,
+  });
+  if (!confirmed) return;
   await guarded(async () => {
     await api.deleteArtwork(artwork.id); // its files are removed after the next publication
     state.flash = { target: 'publish-message', kind: 'info', text: `«${artwork.title}» eliminada. Publica para quitarla de la app.` };
