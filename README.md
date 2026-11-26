@@ -1,7 +1,7 @@
 # ManuGrafias AR - Content panel (MVP 2)
 
 Static web panel where the administrator manages photographers and artworks and publishes them to the AR
-experience ([manugrafias](https://github.com/manfer993/manugrafias)). Requirements: SRS v1.4 FR-10 to FR-14,
+experience ([manugrafias](https://github.com/manfer993/manugrafias)). Requirements: SRS v1.5 FR-10 to FR-14,
 ERR-11 to ERR-13 (`../SRS_manugrafias.md`). Hosted on GitHub Pages: `https://manfer993.github.io/manugrafias_admin/`.
 
 ## Structure
@@ -42,14 +42,14 @@ photographers/{slug}/published/v{version}/targets.mind
 `published.targetsPath` and `published.artworks[].videoPath` hold absolute Supabase public URLs; the AR
 experience uses absolute URLs as they are.
 
-## Differences from SRS v1.4 (decided for the no-cost plan)
+## Decisions for the no-cost plan (in SRS v1.5)
 
-- FR-10 / NFR-02: Google sign-in instead of email and password, so there is no "Forgot password" (AC-10.3 does not
-  apply). The administrator account is the only one: sign-ups are disabled.
+- FR-10: Google sign-in instead of email and password, so there is no "Forgot password". The administrator
+  account is the only one: sign-ups are disabled.
 - NFR-02: media in Supabase Storage (free plan) instead of Cloud Storage for Firebase (needs the Blaze plan).
-- Editing the photographer's name or links updates the AR experience on save (only artworks wait for "Publish").
-- SRS 1.2 says photographers are never deleted; the panel can delete one (after typing its slug to confirm): its
-  document, artworks and files are removed and its URL and QR code stop working at once. The slug becomes free again.
+- FR-11: editing the photographer's name or links updates the AR experience on save (only artworks wait for
+  "Publish"). A photographer can be deleted (after typing its slug to confirm): its document, artworks and files
+  are removed and its URL and QR code stop working at once. The slug becomes free again.
 
 ## Administrator setup (done once)
 
