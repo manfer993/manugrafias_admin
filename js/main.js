@@ -426,8 +426,8 @@ async function onSavePhotographer(event) {
         if (state.creating) {
           const slug = await uniqueSlug(name, api.photographerExists);
           await api.createPhotographer(slug, { name, links: cleanLinks(links) });
-          state.flash = { target: 'photographer-message', kind: 'ok', text: `Fotógrafo creado. Su URL es ${arUrl(slug)}` };
           await loadPhotographers(slug);
+          toast('ok', rich({ strong: name }, ' creado. Su URL es ', { strong: arUrl(slug) }), 8000);
         } else {
           await api.updatePhotographer(state.slug, { name, links: cleanLinks(links) });
           state.flash = { target: 'photographer-message', kind: 'ok', text: 'Cambios guardados.' };
