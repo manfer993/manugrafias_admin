@@ -1,5 +1,17 @@
 // Styled confirmation dialogs (native <dialog>), used instead of the browser's confirm() / prompt().
 
+// `title` and `message` are a string or a list of parts: strings and { strong: text } (shown in bold).
+function appendParts(el, content) {
+  for (const part of Array.isArray(content) ? content : [content]) {
+    if (typeof part === 'string') el.append(part);
+    else {
+      const strong = document.createElement('strong');
+      strong.textContent = part.strong;
+      el.append(strong);
+    }
+  }
+}
+
 // confirmDialog({ title, message, details?, confirmLabel?, cancelLabel?, danger?, requireText? }) -> Promise<boolean>
 // With `requireText`, the confirm button stays disabled until that exact text is typed.
 export function confirmDialog({
@@ -22,10 +34,10 @@ export function confirmDialog({
 
     const heading = document.createElement('h2');
     heading.id = 'dialog-title';
-    heading.textContent = title;
+    appendParts(heading, title);
 
     const text = document.createElement('p');
-    text.textContent = message;
+    appendParts(text, message);
     form.append(heading, text);
 
     if (details.length) {

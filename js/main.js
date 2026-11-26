@@ -52,8 +52,19 @@ function show(view) {
   for (const name of ['loading', 'login', 'app']) $(`view-${name}`).hidden = name !== view;
 }
 
+// Message text with some parts in bold: rich('Se subió ', { strong: title }, '.') -> { html } (escaped).
+const rich = (...parts) => ({
+  html: parts.map((p) => (typeof p === 'string' ? esc(p) : `<strong>${esc(p.strong)}</strong>`)).join(''),
+});
+
 function setMessage(el, kind, content) {
   if (!el) return;
+  if (content?.html) {
+    el.className = `message ${kind}`;
+    el.innerHTML = content.html;
+    el.hidden = false;
+    return;
+  }
   if (!content || (Array.isArray(content) && content.length === 0)) {
     el.hidden = true;
     el.innerHTML = '';
@@ -66,6 +77,21 @@ function setMessage(el, kind, content) {
       : `<ul>${content.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
     : esc(content);
   el.hidden = false;
+}
+
+// Short notice at the bottom of the screen, not tied to any section (e.g. after deleting a photographer).
+function toast(kind, content, ms = 6000) {
+  const el = document.createElement('div');
+  el.setAttribute('role', 'status');
+  document.body.append(el);
+  setMessage(el, kind, content);
+  el.classList.add('toast');
+  const close = () => {
+    el.classList.add('toast-out');
+    setTimeout(() => el.remove(), 250);
+  };
+  el.addEventListener('click', close);
+  setTimeout(close, ms);
 }
 
 // AC-13.3: warn before leaving while uploading or publishing.
@@ -273,7 +299,7 @@ function publishHtml(p) {
     <div id="publish-progress" class="section" hidden>
       <div class="progress"><div id="publish-bar"></div></div>
       <p id="publish-step" class="muted"></p>
-      <p class="muted">No cierres esta página hasta que veas «Publicado».</p>
+      <p class="muted">No cierres esta página hasta que veas <strong>Publicado</strong>.</p>
     </div>
     <div id="publish-message" class="message" hidden></div>
     <div class="actions"><button type="button" id="btn-retry" class="btn btn-secondary btn-small" hidden>Reintentar</button></div>
@@ -420,7 +446,7 @@ async function onDeletePhotographer() {
   const message = $('delete-message');
   if (state.busy > 0) return setMessage(message, 'error', 'Espera a que termine la subida o publicación en curso.');
   const confirmed = await confirmDialog({
-    title: `¿Eliminar a ${photographer.name}?`,
+    title: ['¿Eliminar a ', { strong: photographer.name }, '?'],
     message: 'Esta acción no se puede deshacer. Se borrará:',
     details: [
       `El fotógrafo, su nombre y sus enlaces.`,
@@ -440,16 +466,16 @@ async function onDeletePhotographer() {
     () =>
       busy(async () => {
         await api.deletePhotographer(slug);
-        let text = `«${photographer.name}» eliminado.`;
+        const parts = [{ strong: photographer.name }, ' eliminado.'];
         try {
           await api.removeFiles(await api.listFiles(`photographers/${slug}`));
         } catch (error) {
           console.warn('File cleanup failed', error);
-          text += ' Algunos archivos no se pudieron borrar del almacenamiento (no afecta a la app).';
+          parts.push(' Algunos archivos no se pudieron borrar del almacenamiento (no afecta a la app).');
         }
         state.slug = null;
-        state.flash = { target: 'photographer-message', kind: text.includes('Algunos') ? 'info' : 'ok', text };
         await loadPhotographers(null);
+        toast(parts.length > 2 ? 'info' : 'ok', rich(...parts));
       }),
     (error) => {
       button.disabled = false;
@@ -549,7 +575,7 @@ async function onAddArtwork(event) {
           api.removeFiles([imagePath, videoPath]).catch(() => {});
           throw error;
         }
-        state.flash = { target: 'publish-message', kind: 'info', text: `«${title}» se subió. Publica para que se vea en la app.` };
+        state.flash = { target: 'publish-message', kind: 'info', text: rich({ strong: title }, ' se subió. Publica para que se vea en la app.') };
         await openPhotographer(slug);
       }),
     (error) => {
@@ -624,7 +650,7 @@ async function onReplace(event, artwork, card) {
         }
         // The previous files stay until the next publication: the live version may still use them.
         await api.updateArtwork(artwork.id, patch);
-        state.flash = { target: 'publish-message', kind: 'info', text: `Archivos de «${artwork.title}» reemplazados. Publica para que se vea en la app.` };
+        state.flash = { target: 'publish-message', kind: 'info', text: rich('Archivos de ', { strong: artwork.title }, ' reemplazados. Publica para que se vea en la app.') };
         await openPhotographer(state.slug);
       }),
     (error) => {
@@ -636,15 +662,15 @@ async function onReplace(event, artwork, card) {
 
 async function onDelete(artwork) {
   const confirmed = await confirmDialog({
-    title: `¿Eliminar ${artwork.title}?`,
-    message: '¿Estás seguro de que quieres quitar esta obra de tu galería? Se seguirá viendo en la app hasta que publiques.',
+    title: ['¿Eliminar ', { strong: artwork.title }, '?'],
+    message: ['¿Estás seguro de que quieres quitar ', { strong: artwork.title }, ' de tu galería? Se seguirá viendo en la app hasta que publiques.'],
     confirmLabel: 'Eliminar obra',
     danger: true,
   });
   if (!confirmed) return;
   await guarded(async () => {
     await api.deleteArtwork(artwork.id); // its files are removed after the next publication
-    state.flash = { target: 'publish-message', kind: 'info', text: `«${artwork.title}» eliminada. Publica para quitarla de la app.` };
+    state.flash = { target: 'publish-message', kind: 'info', text: rich({ strong: artwork.title }, ' eliminada. Publica para quitarla de la app.') };
     await openPhotographer(state.slug);
   });
 }
